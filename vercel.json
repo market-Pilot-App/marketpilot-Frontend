@@ -6,15 +6,15 @@
     },
     {
       "path": "/api/cron/post",
-      "schedule": "0 6,11,19 * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/boost",
-      "schedule": "0 7,12,20 * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/report",
-      "schedule": "0 6 * * *"
+      "schedule": "0 5 * * *"
     }
   ]
 }
