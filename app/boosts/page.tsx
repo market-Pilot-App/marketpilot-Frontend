@@ -95,7 +95,7 @@ export default function Boosts() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Daily budget limit (₦)</label>
+              <label className="block text-sm text-gray-400 mb-1">Daily budget limit ($)</label>
               <input
                 type="number"
                 value={settings.daily_budget_limit}
@@ -114,7 +114,7 @@ export default function Boosts() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">💰 Provider Balance</h3>
             {balance !== null ? (
-              <p className="text-3xl font-bold text-green-400">₦{balance}</p>
+              <p className="text-3xl font-bold text-green-400">${balance}</p>
             ) : (
               <p className="text-gray-500 text-sm">Click to check</p>
             )}

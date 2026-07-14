@@ -52,7 +52,7 @@ export default function Analytics() {
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <p className="text-sm text-gray-400">Spend Today</p>
-          <p className="text-3xl font-bold mt-1 text-yellow-400">₦{spendToday.toFixed(0)}</p>
+          <p className="text-3xl font-bold mt-1 text-yellow-400">${spendToday.toFixed(2)}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <p className="text-sm text-gray-400">Success Rate</p>

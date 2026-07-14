@@ -12,6 +12,7 @@ const navItems = [
   { href: "/content", label: "Content Studio", icon: "✍️" },
   { href: "/scheduler", label: "Scheduler", icon: "📅" },
   { href: "/boosts", label: "Boosts", icon: "🚀" },
+  { href: "/blog", label: "Blog", icon: "📝" },
   { href: "/analytics", label: "Analytics", icon: "📈" },
 ];
 
