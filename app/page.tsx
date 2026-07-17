@@ -12,6 +12,16 @@ interface Stats {
   active_campaigns: number;
 }
 
+interface Overview {
+  total_posts: number;
+  total_blogs: number;
+  total_referral_clicks: number;
+  total_spend: number;
+  telegram_members: number;
+  platform_counts: Record<string, number>;
+  chart: { date: string; posts: number }[];
+}
+
 interface RecentPost {
   id: number;
   platform: string;
@@ -47,30 +57,28 @@ const PLATFORM_ICONS: Record<string, string> = {
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [overview, setOverview] = useState<Overview | null>(null);
   const [recent, setRecent] = useState<RecentPost[]>([]);
   const [trends, setTrends] = useState<TrendData | null>(null);
   const [referrals, setReferrals] = useState<ReferralStats | null>(null);
-  const [telegramMembers, setTelegramMembers] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
       api.get("/analytics/dashboard"),
+      api.get("/analytics/overview"),
       api.get("/analytics/history?days=1"),
       api.get("/jobs/trends"),
       api.get("/referrals/stats"),
-    ]).then(([statsData, recentData, trendsData, referralData]) => {
+    ]).then(([statsData, overviewData, recentData, trendsData, referralData]) => {
       setStats(statsData);
+      setOverview(overviewData);
       setRecent(recentData.slice(0, 10));
       setTrends(trendsData);
       setReferrals(referralData);
       setLoading(false);
     }).catch(() => setLoading(false));
-
-    // Fetch Telegram member count separately (non-critical)
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/referrals/stats`)
-      .catch(() => null);
   }, []);
 
   const runAction = async (label: string, endpoint: string, successMsg: string) => {
@@ -90,8 +98,11 @@ export default function Dashboard() {
         { label: "Posts Today", value: stats.total_posts_today, icon: "📝" },
         { label: "Boosts Today", value: stats.total_boosts_today, icon: "🚀" },
         { label: "Spend Today", value: `$${stats.spend_today.toFixed(2)}`, icon: "💰" },
-        { label: "Spend This Week", value: `$${stats.spend_this_week.toFixed(2)}`, icon: "📊" },
         { label: "Queued Posts", value: stats.queued_posts, icon: "📅" },
+        { label: "Total Posts (All Time)", value: overview?.total_posts ?? "—", icon: "📊" },
+        { label: "Blogs Published", value: overview?.total_blogs ?? "—", icon: "✍️" },
+        { label: "Referral Clicks", value: overview?.total_referral_clicks ?? "—", icon: "🔗" },
+        { label: "Telegram Members", value: overview?.telegram_members ?? "—", icon: "✈️" },
         { label: "Active Campaigns", value: stats.active_campaigns, icon: "🎯" },
       ]
     : [];
@@ -144,12 +155,14 @@ export default function Dashboard() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Channel</span>
-                  <a href="https://t.me/ReportAfricaNews" target="_blank" className="text-blue-400 hover:underline">@ReportAfricaNews</a>
+                  <span className="text-gray-400">Members</span>
+                  <span className="text-white font-bold text-lg">
+                    {overview?.telegram_members != null ? overview.telegram_members.toLocaleString() : "—"}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Bot</span>
-                  <span className="text-gray-300">@ReportAfricaMarketBot</span>
+                  <span className="text-gray-400">Channel</span>
+                  <a href="https://t.me/ReportAfricaNews" target="_blank" className="text-blue-400 hover:underline">@ReportAfricaNews</a>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Posts mirror from</span>
@@ -164,24 +177,54 @@ export default function Dashboard() {
 
             {/* Platform Activity */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">Platform Activity Today</h3>
+              <h3 className="text-lg font-semibold mb-4">Platform Activity</h3>
               <div className="space-y-2">
                 {["facebook", "linkedin", "instagram", "twitter", "telegram"].map((p) => {
-                  const count = recent.filter((r) => r.platform === p && r.status === "posted").length;
+                  const today_count = recent.filter((r) => r.platform === p && r.status === "posted").length;
+                  const all_time = overview?.platform_counts?.[p] ?? 0;
                   return (
                     <div key={p} className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2 text-gray-300 capitalize">
                         {PLATFORM_ICONS[p]} {p}
                       </span>
-                      <span className={`px-2 py-0.5 rounded text-xs ${count > 0 ? "bg-green-600/20 text-green-400" : "bg-gray-800 text-gray-500"}`}>
-                        {count} posts
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">{all_time} total</span>
+                        <span className={`px-2 py-0.5 rounded text-xs ${today_count > 0 ? "bg-green-600/20 text-green-400" : "bg-gray-800 text-gray-500"}`}>
+                          {today_count} today
+                        </span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
           </div>
+
+          {/* 7-Day Post Chart */}
+          {overview?.chart && (
+            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">📈 Posts — Last 7 Days</h3>
+                <span className="text-xs text-gray-500">{overview.total_posts} total all time</span>
+              </div>
+              <div className="flex items-end gap-2 h-24">
+                {overview.chart.map((day) => {
+                  const max = Math.max(...overview.chart.map((d) => d.posts), 1);
+                  const height = Math.max((day.posts / max) * 100, 4);
+                  return (
+                    <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-xs text-gray-400">{day.posts}</span>
+                      <div
+                        className="w-full bg-blue-500 rounded-t"
+                        style={{ height: `${height}%` }}
+                      />
+                      <span className="text-xs text-gray-500">{day.date}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Trending Now */}
           {trends && (
