@@ -120,6 +120,7 @@ export default function Dashboard() {
     { label: "📝 Auto Blog", endpoint: "/jobs/auto-blog", msg: "Blog post generated & published!", color: "bg-teal-600 hover:bg-teal-700" },
     { label: "📧 Send Report", endpoint: "/scheduler/run-morning-report", msg: "Report sent!", color: "bg-yellow-600 hover:bg-yellow-700" },
     { label: "📊 Weekly Report", endpoint: "/scheduler/run-weekly-report", msg: "Weekly report sent!", color: "bg-yellow-700 hover:bg-yellow-800" },
+    { label: "🧹 Dedup Queue", endpoint: "/scheduler/dedup-queue", msg: "Queue deduplicated!", color: "bg-gray-600 hover:bg-gray-500" },
   ];
 
   return (
