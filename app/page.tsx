@@ -54,6 +54,14 @@ interface ReferralStats {
   top_links: ReferralLink[];
 }
 
+interface PlatformHealth {
+  facebook:  { ok: boolean; page?: string; error?: string };
+  instagram: { ok: boolean; account?: string; error?: string };
+  linkedin:  { ok: boolean; name?: string; error?: string };
+  twitter:   { ok: boolean; username?: string; error?: string };
+  summary:   { healthy: number; broken: number };
+}
+
 const PLATFORM_ICONS: Record<string, string> = {
   facebook: "📘",
   linkedin: "💼",
@@ -69,6 +77,7 @@ export default function Dashboard() {
   const [recent, setRecent] = useState<RecentPost[]>([]);
   const [trends, setTrends] = useState<TrendData | null>(null);
   const [referrals, setReferrals] = useState<ReferralStats | null>(null);
+  const [health, setHealth] = useState<PlatformHealth | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -80,13 +89,15 @@ export default function Dashboard() {
       api.get("/analytics/history?days=1"),
       api.get("/jobs/trends"),
       api.get("/referrals/stats"),
-    ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
+      api.get("/health/platforms"),
+    ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData, healthData]) => {
       setStats(statsData);
       setOverview(overviewData);
       setAnglePerf(anglePerfData.angles || []);
       setRecent(recentData.slice(0, 10));
       setTrends(trendsData);
       setReferrals(referralData);
+      setHealth(healthData);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -355,6 +366,44 @@ export default function Dashboard() {
               ) : (
                 <p className="text-gray-500 text-sm">No referral links yet — they are auto-created when content is generated.</p>
               )}
+            </div>
+          )}
+
+          {/* Platform Health */}
+          {health && (
+            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">🔌 Platform Health</h3>
+                <span className={`text-xs px-3 py-1 rounded-full ${
+                  health.summary.broken === 0 ? "bg-green-400/10 text-green-400" : "bg-red-400/10 text-red-400"
+                }`}>
+                  {health.summary.healthy}/4 connected
+                </span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {([
+                  { key: "facebook",  label: "Facebook",  icon: "📘", detail: health.facebook.page     || health.facebook.error  },
+                  { key: "instagram", label: "Instagram", icon: "📸", detail: health.instagram.account || health.instagram.error },
+                  { key: "linkedin",  label: "LinkedIn",  icon: "💼", detail: health.linkedin.name     || health.linkedin.error  },
+                  { key: "twitter",   label: "Twitter/X", icon: "🐦", detail: health.twitter.username  || health.twitter.error   },
+                ] as const).map(({ key, label, icon, detail }) => {
+                  const ok = health[key].ok;
+                  return (
+                    <div key={key} className={`rounded-lg p-4 border ${
+                      ok ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span>{icon}</span>
+                        <span className="text-sm font-medium">{label}</span>
+                        <span className={`ml-auto text-xs ${ok ? "text-green-400" : "text-red-400"}`}>
+                          {ok ? "●" : "✕"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">{detail || "—"}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
