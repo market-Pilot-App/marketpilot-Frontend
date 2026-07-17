@@ -20,23 +20,72 @@ interface RecentPost {
   post_url: string;
 }
 
+interface TrendData {
+  all_topics: string[];
+  relevant: string[];
+}
+
+interface ReferralLink {
+  code: string;
+  angle: string;
+  clicks: number;
+  created_at: string;
+}
+
+interface ReferralStats {
+  total_clicks: number;
+  top_links: ReferralLink[];
+}
+
+const PLATFORM_ICONS: Record<string, string> = {
+  facebook: "📘",
+  linkedin: "💼",
+  instagram: "📸",
+  twitter: "🐦",
+  telegram: "✈️",
+};
+
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recent, setRecent] = useState<RecentPost[]>([]);
+  const [trends, setTrends] = useState<TrendData | null>(null);
+  const [referrals, setReferrals] = useState<ReferralStats | null>(null);
+  const [telegramMembers, setTelegramMembers] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
       api.get("/analytics/dashboard"),
       api.get("/analytics/history?days=1"),
-    ]).then(([statsData, recentData]) => {
+      api.get("/jobs/trends"),
+      api.get("/referrals/stats"),
+    ]).then(([statsData, recentData, trendsData, referralData]) => {
       setStats(statsData);
       setRecent(recentData.slice(0, 10));
+      setTrends(trendsData);
+      setReferrals(referralData);
       setLoading(false);
     }).catch(() => setLoading(false));
+
+    // Fetch Telegram member count separately (non-critical)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/referrals/stats`)
+      .catch(() => null);
   }, []);
 
-  const cards = stats
+  const runAction = async (label: string, endpoint: string, successMsg: string) => {
+    setActionLoading(label);
+    try {
+      await api.post(endpoint);
+      alert(successMsg);
+    } catch {
+      alert("Error — check backend logs");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const statCards = stats
     ? [
         { label: "Posts Today", value: stats.total_posts_today, icon: "📝" },
         { label: "Boosts Today", value: stats.total_boosts_today, icon: "🚀" },
@@ -47,16 +96,33 @@ export default function Dashboard() {
       ]
     : [];
 
+  const quickActions = [
+    { label: "Generate Content", href: "/content", color: "bg-blue-600 hover:bg-blue-700" },
+    { label: "Write Blog Post", href: "/blog", color: "bg-indigo-600 hover:bg-indigo-700" },
+  ];
+
+  const cronActions = [
+    { label: "Run Posts Now", endpoint: "/scheduler/run-posts", msg: "Posts triggered!", color: "bg-green-600 hover:bg-green-700" },
+    { label: "Run Boosts Now", endpoint: "/scheduler/run-boosts", msg: "Boosts triggered!", color: "bg-purple-600 hover:bg-purple-700" },
+    { label: "🔥 Newsjack Now", endpoint: "/jobs/newsjack", msg: "Newsjack post sent!", color: "bg-orange-600 hover:bg-orange-700" },
+    { label: "📈 Milestone Post", endpoint: "/jobs/milestone", msg: "Milestone post sent!", color: "bg-pink-600 hover:bg-pink-700" },
+    { label: "📧 Send Report", endpoint: "/scheduler/run-morning-report", msg: "Report sent!", color: "bg-yellow-600 hover:bg-yellow-700" },
+  ];
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Dashboard</h2>
+        <span className="text-xs text-green-400 bg-green-400/10 px-3 py-1 rounded-full">● Autopilot Active</span>
+      </div>
 
       {loading ? (
         <p className="text-gray-400">Loading...</p>
       ) : (
         <>
+          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cards.map((card) => (
+            {statCards.map((card) => (
               <div key={card.label} className="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-gray-400 text-sm">{card.label}</span>
@@ -67,36 +133,161 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <div className="mt-8 bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="flex gap-3 flex-wrap">
-              <a href="/content" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors">
-                Generate Content
-              </a>
-              <a href="/blog" className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition-colors">
-                Write Blog Post
-              </a>
-              <button
-                onClick={() => api.post("/scheduler/run-posts").then(() => alert("Done!"))}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm transition-colors"
-              >
-                Run Posts Now
-              </button>
-              <button
-                onClick={() => api.post("/scheduler/run-boosts").then(() => alert("Done!"))}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm transition-colors"
-              >
-                Run Boosts Now
-              </button>
-              <button
-                onClick={() => api.post("/scheduler/run-morning-report").then(() => alert("Report sent!"))}
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm transition-colors"
-              >
-                📧 Send Report
-              </button>
+          {/* Telegram + Platform Row */}
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Telegram Channel Card */}
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">✈️</span>
+                <h3 className="text-lg font-semibold">Telegram Channel</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Channel</span>
+                  <a href="https://t.me/ReportAfricaNews" target="_blank" className="text-blue-400 hover:underline">@ReportAfricaNews</a>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Bot</span>
+                  <span className="text-gray-300">@ReportAfricaMarketBot</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Posts mirror from</span>
+                  <span className="text-gray-300">FB + LinkedIn + Newsjack</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Status</span>
+                  <span className="text-green-400">● Live</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Activity */}
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <h3 className="text-lg font-semibold mb-4">Platform Activity Today</h3>
+              <div className="space-y-2">
+                {["facebook", "linkedin", "instagram", "twitter", "telegram"].map((p) => {
+                  const count = recent.filter((r) => r.platform === p && r.status === "posted").length;
+                  return (
+                    <div key={p} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-gray-300 capitalize">
+                        {PLATFORM_ICONS[p]} {p}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-xs ${count > 0 ? "bg-green-600/20 text-green-400" : "bg-gray-800 text-gray-500"}`}>
+                        {count} posts
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
+          {/* Trending Now */}
+          {trends && (
+            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">🔥 Trending Now in Nigeria</h3>
+                <span className="text-xs text-gray-500">Google Trends · Live</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">Relevant to ReportAfrica</p>
+                  <div className="space-y-1">
+                    {trends.relevant.length > 0 ? trends.relevant.slice(0, 5).map((t, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-lg px-3 py-2">
+                        <span className="text-orange-400 text-xs font-bold">#{i + 1}</span>
+                        <span className="text-sm text-white capitalize">{t}</span>
+                        <span className="ml-auto text-xs text-orange-400">● Relevant</span>
+                      </div>
+                    )) : <p className="text-gray-500 text-sm">No relevant topics right now</p>}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">All Trending</p>
+                  <div className="space-y-1">
+                    {trends.all_topics.slice(0, 5).map((t, i) => (
+                      <div key={i} className="flex items-center gap-2 bg-gray-800 rounded-lg px-3 py-2">
+                        <span className="text-gray-500 text-xs">#{i + 1}</span>
+                        <span className="text-sm text-gray-300 capitalize">{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Referral Links */}
+          {referrals && (
+            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">🔗 Referral Link Performance</h3>
+                <span className="text-sm text-gray-400">Total clicks: <span className="text-white font-bold">{referrals.total_clicks}</span></span>
+              </div>
+              {referrals.top_links.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-gray-500 text-xs uppercase border-b border-gray-800">
+                        <th className="text-left pb-2">Code</th>
+                        <th className="text-left pb-2">Angle</th>
+                        <th className="text-left pb-2">Clicks</th>
+                        <th className="text-left pb-2">Link</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {referrals.top_links.slice(0, 8).map((link) => (
+                        <tr key={link.code} className="text-gray-300">
+                          <td className="py-2 font-mono text-xs text-blue-400">{link.code}</td>
+                          <td className="py-2 capitalize">{link.angle?.replace("_", " ")}</td>
+                          <td className="py-2">
+                            <span className={`px-2 py-0.5 rounded text-xs ${link.clicks > 0 ? "bg-green-600/20 text-green-400" : "bg-gray-800 text-gray-500"}`}>
+                              {link.clicks}
+                            </span>
+                          </td>
+                          <td className="py-2">
+                            <a
+                              href={`https://marketpilot-backend.onrender.com/api/referrals/r/${link.code}`}
+                              target="_blank"
+                              className="text-xs text-blue-400 hover:underline"
+                            >
+                              Open →
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">No referral links yet — they are auto-created when content is generated.</p>
+              )}
+            </div>
+          )}
+
+          {/* Quick Actions */}
+          <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div className="flex gap-3 flex-wrap">
+              {quickActions.map((a) => (
+                <a key={a.label} href={a.href} className={`px-4 py-2 ${a.color} rounded-lg text-sm transition-colors`}>
+                  {a.label}
+                </a>
+              ))}
+              {cronActions.map((a) => (
+                <button
+                  key={a.label}
+                  onClick={() => runAction(a.label, a.endpoint, a.msg)}
+                  disabled={actionLoading === a.label}
+                  className={`px-4 py-2 ${a.color} rounded-lg text-sm transition-colors disabled:opacity-50`}
+                >
+                  {actionLoading === a.label ? "Running..." : a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Today's Activity Feed */}
           {recent.length > 0 && (
             <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4">📋 Today's Activity</h3>
@@ -104,6 +295,7 @@ export default function Dashboard() {
                 {recent.map((post) => (
                   <div key={post.id} className="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3">
                     <div className="flex items-center gap-3">
+                      <span>{PLATFORM_ICONS[post.platform] || "📱"}</span>
                       <span className="text-sm capitalize">{post.platform}</span>
                       <span className="text-xs text-gray-500">
                         {post.posted_at ? new Date(post.posted_at).toLocaleTimeString() : "—"}
