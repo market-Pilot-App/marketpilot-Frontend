@@ -89,17 +89,17 @@ export default function Dashboard() {
       api.get("/analytics/history?days=1"),
       api.get("/jobs/trends"),
       api.get("/referrals/stats"),
-      api.get("/health/platforms"),
-    ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData, healthData]) => {
+    ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
       setStats(statsData);
       setOverview(overviewData);
       setAnglePerf(anglePerfData.angles || []);
       setRecent(recentData.slice(0, 10));
       setTrends(trendsData);
       setReferrals(referralData);
-      setHealth(healthData);
       setLoading(false);
     }).catch(() => setLoading(false));
+
+    api.get("/health/platforms").then(setHealth).catch(() => {});
   }, []);
 
   const runAction = async (label: string, endpoint: string, successMsg: string) => {
