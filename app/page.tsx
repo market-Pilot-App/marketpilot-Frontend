@@ -22,6 +22,13 @@ interface Overview {
   chart: { date: string; posts: number }[];
 }
 
+interface AnglePerf {
+  angle: string;
+  clicks: number;
+  posts: number;
+  ctr: number;
+}
+
 interface RecentPost {
   id: number;
   platform: string;
@@ -58,6 +65,7 @@ const PLATFORM_ICONS: Record<string, string> = {
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [anglePerf, setAnglePerf] = useState<AnglePerf[]>([]);
   const [recent, setRecent] = useState<RecentPost[]>([]);
   const [trends, setTrends] = useState<TrendData | null>(null);
   const [referrals, setReferrals] = useState<ReferralStats | null>(null);
@@ -68,12 +76,14 @@ export default function Dashboard() {
     Promise.all([
       api.get("/analytics/dashboard"),
       api.get("/analytics/overview"),
+      api.get("/analytics/angle-performance"),
       api.get("/analytics/history?days=1"),
       api.get("/jobs/trends"),
       api.get("/referrals/stats"),
-    ]).then(([statsData, overviewData, recentData, trendsData, referralData]) => {
+    ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
       setStats(statsData);
       setOverview(overviewData);
+      setAnglePerf(anglePerfData.angles || []);
       setRecent(recentData.slice(0, 10));
       setTrends(trendsData);
       setReferrals(referralData);
@@ -221,6 +231,43 @@ export default function Dashboard() {
                         style={{ height: `${height}%` }}
                       />
                       <span className="text-xs text-gray-500">{day.date}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Angle Performance */}
+          {anglePerf.length > 0 && (
+            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">🎯 Angle Performance</h3>
+                <span className="text-xs text-gray-500">clicks ÷ posts = CTR · rotation auto-weighted</span>
+              </div>
+              <div className="space-y-2">
+                {anglePerf.slice(0, 8).map((a, i) => {
+                  const maxClicks = Math.max(...anglePerf.map(x => x.clicks), 1);
+                  const barWidth = Math.max((a.clicks / maxClicks) * 100, 2);
+                  return (
+                    <div key={a.angle} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500 w-4">{i + 1}</span>
+                      <span className="text-sm text-gray-300 capitalize w-36 flex-shrink-0">
+                        {a.angle.replace(/_/g, " ")}
+                      </span>
+                      <div className="flex-1 bg-gray-800 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400 w-16 text-right">{a.clicks} clicks</span>
+                      <span className="text-xs text-gray-600 w-16 text-right">{a.posts} posts</span>
+                      <span className={`text-xs w-14 text-right font-mono ${
+                        a.ctr > 0.1 ? "text-green-400" : a.ctr > 0 ? "text-yellow-400" : "text-gray-600"
+                      }`}>
+                        {a.ctr > 0 ? `${(a.ctr * 100).toFixed(1)}%` : "—"}
+                      </span>
                     </div>
                   );
                 })}
