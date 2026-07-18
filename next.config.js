@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-// cache-bust: 2
+// cache-bust: 3
 const nextConfig = {
   async rewrites() {
     return [
