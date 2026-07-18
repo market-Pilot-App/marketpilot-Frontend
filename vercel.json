@@ -1,11 +1,13 @@
 {
   "crons": [
-    { "path": "/api/cron/fill",         "schedule": "0 23 * * *" },
-    { "path": "/api/cron/post",         "schedule": "0 6 * * *"  },
-    { "path": "/api/cron/boost",        "schedule": "0 7 * * *"  },
-    { "path": "/api/cron/report",       "schedule": "0 5 * * *"  },
-    { "path": "/api/cron/weekly-report","schedule": "0 7 * * 1"  },
-    { "path": "/api/cron/blog",         "schedule": "0 8 * * *"  },
-    { "path": "/api/cron/auto-publish", "schedule": "0 * * * *"  }
+    { "path": "/api/cron/fill",           "schedule": "0 23 * * *"  },
+    { "path": "/api/cron/post",           "schedule": "0 6 * * *"   },
+    { "path": "/api/cron/boost",          "schedule": "0 7 * * *"   },
+    { "path": "/api/cron/report",         "schedule": "0 5 * * *"   },
+    { "path": "/api/cron/weekly-report",  "schedule": "0 7 * * 1"   },
+    { "path": "/api/cron/blog",           "schedule": "0 8 * * *"   },
+    { "path": "/api/cron/auto-publish",   "schedule": "0 * * * *"   },
+    { "path": "/api/cron/engagement",     "schedule": "0 * * * *"   },
+    { "path": "/api/cron/telegram-growth","schedule": "0 9,15,21 * * *" }
   ]
 }

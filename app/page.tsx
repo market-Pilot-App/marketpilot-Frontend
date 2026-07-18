@@ -62,6 +62,25 @@ interface PlatformHealth {
   summary:   { healthy: number; broken: number };
 }
 
+interface EngagementPost {
+  id: number;
+  posted_at: string;
+  post_url: string;
+  angle: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  reach: number;
+  clicks: number;
+  text: string;
+}
+
+interface EngagementData {
+  posts: EngagementPost[];
+  totals: { reach: number; likes: number; clicks: number; posts: number };
+  best_post: EngagementPost | null;
+}
+
 const PLATFORM_ICONS: Record<string, string> = {
   facebook: "📘",
   linkedin: "💼",
@@ -78,6 +97,7 @@ export default function Dashboard() {
   const [trends, setTrends] = useState<TrendData | null>(null);
   const [referrals, setReferrals] = useState<ReferralStats | null>(null);
   const [health, setHealth] = useState<PlatformHealth | null>(null);
+  const [engagement, setEngagement] = useState<EngagementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -100,6 +120,7 @@ export default function Dashboard() {
     }).catch(() => setLoading(false));
 
     api.get("/health/platforms").then(setHealth).catch(() => {});
+    api.get("/analytics/engagement").then(setEngagement).catch(() => {});
   }, []);
 
   const runAction = async (label: string, endpoint: string, successMsg: string) => {
@@ -142,6 +163,7 @@ export default function Dashboard() {
     { label: "📧 Send Report", endpoint: "/scheduler/run-morning-report", msg: "Report sent!", color: "bg-yellow-600 hover:bg-yellow-700" },
     { label: "📊 Weekly Report", endpoint: "/scheduler/run-weekly-report", msg: "Weekly report sent!", color: "bg-yellow-700 hover:bg-yellow-800" },
     { label: "🧹 Dedup Queue", endpoint: "/scheduler/dedup-queue", msg: "Queue deduplicated!", color: "bg-gray-600 hover:bg-gray-500" },
+    { label: "📣 Telegram Growth", endpoint: "/scheduler/telegram-growth", msg: "Telegram growth post sent!", color: "bg-blue-500 hover:bg-blue-600" },
   ];
 
   return (
@@ -283,6 +305,45 @@ export default function Dashboard() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Engagement Data */}
+          {engagement && engagement.totals.reach > 0 && (
+            <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">📊 Facebook Engagement (Last 7 Days)</h3>
+                <span className="text-xs text-gray-500">synced hourly</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {[
+                  { label: "Total Reach", value: engagement.totals.reach.toLocaleString(), icon: "👁️" },
+                  { label: "Total Likes", value: engagement.totals.likes.toLocaleString(), icon: "❤️" },
+                  { label: "Link Clicks", value: engagement.totals.clicks.toLocaleString(), icon: "🔗" },
+                  { label: "Posts", value: engagement.totals.posts.toLocaleString(), icon: "📝" },
+                ].map((s) => (
+                  <div key={s.label} className="bg-gray-800 rounded-lg p-3 text-center">
+                    <div className="text-xl mb-1">{s.icon}</div>
+                    <div className="text-xl font-bold text-white">{s.value}</div>
+                    <div className="text-xs text-gray-500">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              {engagement.best_post && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                  <p className="text-xs text-blue-400 mb-1">🏆 Best performing post</p>
+                  <p className="text-sm text-gray-300 mb-2">{engagement.best_post.text}...</p>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>👁️ {engagement.best_post.reach} reach</span>
+                    <span>❤️ {engagement.best_post.likes} likes</span>
+                    <span>🔗 {engagement.best_post.clicks} clicks</span>
+                    <span className="capitalize">{engagement.best_post.angle?.replace(/_/g, " ")}</span>
+                    {engagement.best_post.post_url && (
+                      <a href={engagement.best_post.post_url} target="_blank" className="text-blue-400 hover:underline ml-auto">View →</a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
