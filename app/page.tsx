@@ -164,6 +164,7 @@ export default function Dashboard() {
     { label: "📊 Weekly Report", endpoint: "/scheduler/run-weekly-report", msg: "Weekly report sent!", color: "bg-yellow-700 hover:bg-yellow-800" },
     { label: "🧹 Dedup Queue", endpoint: "/scheduler/dedup-queue", msg: "Queue deduplicated!", color: "bg-gray-600 hover:bg-gray-500" },
     { label: "📣 Telegram Growth", endpoint: "/scheduler/telegram-growth", msg: "Telegram growth post sent!", color: "bg-blue-500 hover:bg-blue-600" },
+    { label: "👥 Boost Audience", endpoint: "/scheduler/boost-audience", msg: "Audience boost ordered!", color: "bg-violet-600 hover:bg-violet-700" },
   ];
 
   return (

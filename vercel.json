@@ -7,7 +7,8 @@
     { "path": "/api/cron/weekly-report",  "schedule": "0 7 * * 1"   },
     { "path": "/api/cron/blog",           "schedule": "0 8 * * *"   },
     { "path": "/api/cron/auto-publish",   "schedule": "0 * * * *"   },
-    { "path": "/api/cron/engagement",     "schedule": "0 * * * *"   },
-    { "path": "/api/cron/telegram-growth","schedule": "0 9,15,21 * * *" }
+    { "path": "/api/cron/engagement",     "schedule": "0 * * * *"      },
+    { "path": "/api/cron/telegram-growth","schedule": "0 9,15,21 * * *" },
+    { "path": "/api/cron/audience-boost", "schedule": "0 10 * * *"     }
   ]
 }
