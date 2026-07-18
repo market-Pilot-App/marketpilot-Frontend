@@ -60,6 +60,9 @@ export default function Boosts() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"
               >
                 <option value="facebook">Facebook</option>
+                <option value="instagram">Instagram</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="telegram">Telegram</option>
                 <option value="twitter">X/Twitter</option>
               </select>
             </div>
