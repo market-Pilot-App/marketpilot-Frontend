@@ -12,7 +12,7 @@ export default function Boosts() {
     daily_budget_limit: 500,
   });
   const [saving, setSaving] = useState(false);
-  const [balance, setBalance] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string | null>(null); // v2
 
   const saveSettings = async () => {
     setSaving(true);
