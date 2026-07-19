@@ -131,6 +131,24 @@ export default function VideoPage() {
                 </div>
               </div>
 
+              {result.post_results && (
+                <div className="bg-gray-800 rounded-lg p-3">
+                  <p className="text-gray-400 text-xs mb-2">🚀 Post Results</p>
+                  <div className="space-y-1">
+                    {Object.entries(result.post_results).map(([platform, r]: [string, any]) => (
+                      <div key={platform} className="flex items-center gap-2 text-xs">
+                        <span className={r?.success ? "text-green-400" : "text-red-400"}>
+                          {r?.success ? "✅" : "❌"}
+                        </span>
+                        <span className="text-gray-300 capitalize">{platform}</span>
+                        {r?.post_url && <a href={r.post_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">View →</a>}
+                        {!r?.success && <span className="text-red-400">{r?.error?.slice(0,60)}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {result.generated?.facebook && (
                 <div className="bg-gray-800 rounded-lg p-3">
                   <p className="text-gray-400 text-xs mb-1">📘 Facebook</p>
