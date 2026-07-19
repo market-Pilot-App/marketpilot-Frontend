@@ -64,6 +64,7 @@ export default function Boosts() {
                 <option value="linkedin">LinkedIn</option>
                 <option value="telegram">Telegram</option>
                 <option value="twitter">X/Twitter</option>
+                <option value="website">Website</option>
               </select>
             </div>
 
