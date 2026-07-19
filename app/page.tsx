@@ -179,20 +179,20 @@ export default function Dashboard() {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
             {statCards.map((card) => (
-              <div key={card.label} className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-400 text-sm">{card.label}</span>
-                  <span className="text-2xl">{card.icon}</span>
+              <div key={card.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-gray-400 text-xs">{card.label}</span>
+                  <span className="text-lg">{card.icon}</span>
                 </div>
-                <p className="text-3xl font-bold text-white">{card.value}</p>
+                <p className="text-xl font-bold text-white">{card.value}</p>
               </div>
             ))}
           </div>
 
           {/* Telegram + Platform Row */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Telegram Channel Card */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -316,7 +316,7 @@ export default function Dashboard() {
                 <h3 className="text-lg font-semibold">📊 Facebook Engagement (Last 7 Days)</h3>
                 <span className="text-xs text-gray-500">synced hourly</span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 {[
                   { label: "Total Reach", value: engagement.totals.reach.toLocaleString(), icon: "👁️" },
                   { label: "Total Likes", value: engagement.totals.likes.toLocaleString(), icon: "❤️" },
@@ -392,7 +392,7 @@ export default function Dashboard() {
               </div>
               {referrals.top_links.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead>
                       <tr className="text-gray-500 text-xs uppercase border-b border-gray-800">
                         <th className="text-left pb-2">Code</th>
@@ -442,7 +442,7 @@ export default function Dashboard() {
                   {health.summary.healthy}/4 connected
                 </span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {([
                   { key: "facebook",  label: "Facebook",  icon: "📘", detail: health.facebook.page     || health.facebook.error  },
                   { key: "instagram", label: "Instagram", icon: "📸", detail: health.instagram.account || health.instagram.error },
@@ -472,9 +472,9 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {quickActions.map((a) => (
-                <a key={a.label} href={a.href} className={`px-4 py-2 ${a.color} rounded-lg text-sm transition-colors`}>
+                <a key={a.label} href={a.href} className={`px-3 py-2 ${a.color} rounded-lg text-xs transition-colors`}>
                   {a.label}
                 </a>
               ))}
@@ -483,7 +483,7 @@ export default function Dashboard() {
                   key={a.label}
                   onClick={() => runAction(a.label, a.endpoint, a.msg)}
                   disabled={actionLoading === a.label}
-                  className={`px-4 py-2 ${a.color} rounded-lg text-sm transition-colors disabled:opacity-50`}
+                  className={`px-3 py-2 ${a.color} rounded-lg text-xs transition-colors disabled:opacity-50`}
                 >
                   {actionLoading === a.label ? "Running..." : a.label}
                 </button>
