@@ -64,6 +64,7 @@ export default function Boosts() {
                 <option value="linkedin">LinkedIn</option>
                 <option value="telegram">Telegram</option>
                 <option value="twitter">X/Twitter</option>
+                <option value="tiktok">TikTok</option>
                 <option value="website">Website</option>
               </select>
             </div>
@@ -116,7 +117,15 @@ export default function Boosts() {
 
         <div className="space-y-6">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">🌐 Website Traffic</h3>
+            <h3 className="text-lg font-semibold mb-4">🎵 TikTok Growth</h3>
+            <p className="text-sm text-gray-400 mb-1">100 followers + 1,000 video views</p>
+            <p className="text-sm text-gray-500 mb-3">~$0.22 per run → @reportafrica8</p>
+            <button onClick={async () => { try { const r = await api.post("/scheduler/boost-tiktok"); alert(`Done! ${r.results?.map((x: any) => x.success ? x.service + ' ✅' : x.service + ' ❌').join(', ')}`); } catch { alert("Error"); } }} className="px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg text-sm">
+              🚀 Boost TikTok Now
+            </button>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-sm text-gray-400 mb-1">1,000 Nigerian Google organic + 1,000 Nigerian social visitors</p>
             <p className="text-sm text-gray-500 mb-3">~$1.16 per run → reportafrica.africa</p>
             <button onClick={async () => { try { const r = await api.post("/scheduler/boost-website"); alert(`Done! Orders: ${r.results?.map((x: any) => x.order_id).join(', ')}`); } catch { alert("Error"); } }} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
