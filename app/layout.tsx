@@ -83,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <div className="flex">
           {/* Desktop sidebar */}
-          <aside className="hidden lg:flex w-64 bg-gray-900 border-r border-gray-800 p-6 flex-col min-h-screen sticky top-0">
+          <aside className="hidden lg:flex w-64 bg-gray-900 border-r border-gray-800 p-6 flex-col h-screen sticky top-0 overflow-y-auto">
             <div className="mb-8">
               <h1 className="text-xl font-bold text-white">🎯 MarketPilot</h1>
               <p className="text-xs text-gray-500 mt-1">Autonomous Marketing Engine</p>
