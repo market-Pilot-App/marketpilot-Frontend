@@ -13,13 +13,15 @@ export default function SubscribePage() {
     if (!form.email && !form.whatsapp) return alert("Provide email or WhatsApp");
     setStatus("loading");
     try {
-      await fetch(`${API_BASE}/api/leads`, {
+      const res = await fetch(`${API_BASE}/api/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, source: "subscribe_page" }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setStatus("done");
-    } catch {
+    } catch (e) {
+      console.error("Subscribe error:", e);
       setStatus("error");
     }
   };
