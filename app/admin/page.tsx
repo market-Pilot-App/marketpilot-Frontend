@@ -55,7 +55,9 @@ export default function AdminPage() {
       ]);
       setClients(c);
       setCampaigns(camp);
-    } catch { /* ignore */ }
+    } catch (err: unknown) {
+      flash(err instanceof Error ? err.message : "Failed to load data — backend may still be deploying", true);
+    }
     setLoading(false);
   };
 
@@ -70,9 +72,9 @@ export default function AdminPage() {
     e.preventDefault();
     try {
       const res = await api.post("/auth/create-client", newClient);
-      flash(`✅ Client created — ID: ${res.id}`);
+      flash(`✅ Client created — ${res.email} (ID: ${res.id})`);
       setNewClient({ name: "", email: "", password: "", plan: "starter", brand_name: "", website_url: "" });
-      loadData();
+      await loadData();
       setTab("clients");
     } catch (err: unknown) {
       flash(err instanceof Error ? err.message : "Failed to create client", true);
@@ -149,7 +151,10 @@ export default function AdminPage() {
         <div>
           {loading ? <p className="text-gray-400">Loading...</p> : (
             <>
-              <p className="text-gray-500 text-sm mb-4">{clients.length} client{clients.length !== 1 ? "s" : ""} total</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-gray-500 text-sm">{clients.length} client{clients.length !== 1 ? "s" : ""} total</p>
+                <button onClick={loadData} className="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 bg-blue-500/10 rounded-lg transition-colors">↻ Refresh</button>
+              </div>
               <div className="space-y-3">
                 {clients.map((c) => {
                   const clientCampaigns = campaigns.filter((camp) => camp.client_id === c.id);
