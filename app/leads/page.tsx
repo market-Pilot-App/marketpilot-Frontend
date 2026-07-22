@@ -16,12 +16,16 @@ interface Lead {
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [broadcasting, setBroadcasting] = useState(false);
   const [tab, setTab] = useState<"list" | "broadcast">("list");
 
   useEffect(() => {
+    const client = JSON.parse(localStorage.getItem("mp_client") || "{}");
+    const admin = client?.plan === "agency";
+    setIsAdmin(admin);
     api.get("/leads").then((d) => { setLeads(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
@@ -41,6 +45,14 @@ export default function LeadsPage() {
 
   const withEmail = leads.filter((l) => l.email).length;
   const withWhatsapp = leads.filter((l) => l.whatsapp).length;
+
+  if (!isAdmin) return (
+    <div className="flex flex-col items-center justify-center h-64 text-center">
+      <p className="text-4xl mb-4">👥</p>
+      <h3 className="text-lg font-bold mb-2">Leads & CRM</h3>
+      <p className="text-gray-400 text-sm max-w-sm">Lead management is handled by the MarketPilot team. Your leads are being collected and managed on your behalf.</p>
+    </div>
+  );
 
   return (
     <div>

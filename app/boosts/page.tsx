@@ -1,7 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { api } from "@/lib/api";
+import { useEffect, useState } from "react";
+
+export default function Boosts() {
+  const isAdmin = typeof window !== "undefined"
+    ? JSON.parse(localStorage.getItem("mp_client") || "{}")?.plan === "agency"
+    : false;
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <p className="text-4xl mb-4">🚀</p>
+        <h2 className="text-xl font-bold mb-2">Boost Management</h2>
+        <p className="text-gray-400 text-sm max-w-sm">Boost management is handled by the MarketPilot team on your behalf. Your posts are automatically boosted based on your plan.</p>
+        <p className="text-gray-500 text-xs mt-3">Contact support to adjust your boost settings.</p>
+      </div>
+    );
+  }
 
 export default function Boosts() {
   const [settings, setSettings] = useState({
