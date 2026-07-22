@@ -109,20 +109,18 @@ export default function Dashboard() {
     setIsAdmin(admin);
 
     const loadDashboard = async () => {
-      let q = "";
       if (!admin) {
         try {
           const camp = await api.get("/auth/my-campaign");
           setCampaign(camp);
-          q = `?campaign_id=${camp.id}`;
         } catch { setLoading(false); return; }
       }
 
       const calls: Promise<unknown>[] = [
-        api.get(`/analytics/dashboard${q}`),
-        api.get(`/analytics/overview${q}`),
-        api.get(`/analytics/angle-performance${q}`),
-        api.get(`/analytics/history${q ? q + "&" : "?"}days=1`),
+        api.get("/analytics/dashboard"),
+        api.get("/analytics/overview"),
+        api.get("/analytics/angle-performance"),
+        api.get("/analytics/history?days=1"),
         api.get("/referrals/stats"),
       ];
       if (admin) calls.push(api.get("/jobs/trends"));
@@ -138,7 +136,7 @@ export default function Dashboard() {
       if (admin) setTrends(val(5) as TrendData);
       setLoading(false);
 
-      api.get(`/analytics/engagement${q}`).then(setEngagement).catch(() => {});
+      api.get("/analytics/engagement").then(setEngagement).catch(() => {});
       if (admin) api.get("/health/platforms").then(setHealth).catch(() => {});
     };
 
