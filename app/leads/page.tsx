@@ -26,6 +26,7 @@ export default function LeadsPage() {
     const client = JSON.parse(localStorage.getItem("mp_client") || "{}");
     const admin = client?.plan === "agency";
     setIsAdmin(admin);
+    if (!admin) { setLoading(false); return; }
     api.get("/leads").then((d) => { setLeads(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
