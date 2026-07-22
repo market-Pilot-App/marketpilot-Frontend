@@ -102,25 +102,43 @@ export default function Dashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      api.get("/analytics/dashboard"),
-      api.get("/analytics/overview"),
-      api.get("/analytics/angle-performance"),
-      api.get("/analytics/history?days=1"),
-      api.get("/jobs/trends"),
-      api.get("/referrals/stats"),
-    ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
-      setStats(statsData);
-      setOverview(overviewData);
-      setAnglePerf(anglePerfData.angles || []);
-      setRecent(recentData.slice(0, 10));
-      setTrends(trendsData);
-      setReferrals(referralData);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    const client = JSON.parse(localStorage.getItem("mp_client") || "{}");
+    const isAdmin = client?.plan === "agency";
 
-    api.get("/health/platforms").then(setHealth).catch(() => {});
-    api.get("/analytics/engagement").then(setEngagement).catch(() => {});
+    // Admin uses campaign 1 (ReportAfrica), others use their assigned campaign
+    const loadDashboard = async () => {
+      let campaignId = 1;
+      if (!isAdmin) {
+        try {
+          const camp = await api.get("/auth/my-campaign");
+          campaignId = camp.id;
+        } catch {
+          // fallback to 1
+        }
+      }
+      const q = `?campaign_id=${campaignId}`;
+      Promise.all([
+        api.get(`/analytics/dashboard${q}`),
+        api.get(`/analytics/overview${q}`),
+        api.get(`/analytics/angle-performance${q}`),
+        api.get(`/analytics/history${q}&days=1`),
+        api.get("/jobs/trends"),
+        api.get("/referrals/stats"),
+      ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
+        setStats(statsData);
+        setOverview(overviewData);
+        setAnglePerf(anglePerfData.angles || []);
+        setRecent(recentData.slice(0, 10));
+        setTrends(trendsData);
+        setReferrals(referralData);
+        setLoading(false);
+      }).catch(() => setLoading(false));
+
+      api.get(`/analytics/engagement${q}`).then(setEngagement).catch(() => {});
+      api.get("/health/platforms").then(setHealth).catch(() => {});
+    };
+
+    loadDashboard();
   }, []);
 
   const runAction = async (label: string, endpoint: string, successMsg: string) => {
