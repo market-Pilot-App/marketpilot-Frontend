@@ -5,29 +5,20 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: "📊" },
-  { href: "/content", label: "Content Studio", icon: "✍️" },
-  { href: "/scheduler", label: "Scheduler", icon: "📅" },
-  { href: "/boosts", label: "Boosts", icon: "🚀" },
-  { href: "/blog", label: "Blog", icon: "📝" },
-  { href: "/analytics", label: "Analytics", icon: "📈" },
-  { href: "/referrals", label: "Referrals", icon: "🔗" },
-  { href: "/video", label: "Video Studio", icon: "🎬" },
-  { href: "/whatsapp", label: "WhatsApp", icon: "💬" },
-  { href: "/calendar", label: "Calendar", icon: "📅" },
-  { href: "/leads", label: "Leads & CRM", icon: "👥" },
-];
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [client, setClient] = useState<{ name: string; plan: string } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     const stored = localStorage.getItem("mp_client");
-    if (stored) setClient(JSON.parse(stored));
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setClient(parsed);
+      setIsAdmin(parsed.plan === "agency");
+    }
   }, []);
 
   const handleLogout = () => {
@@ -40,6 +31,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   if (isAuthPage) return (
     <html lang="en"><body className="bg-gray-950 text-white min-h-screen">{children}</body></html>
   );
+
+  const navItems = [
+    { href: "/", label: "Dashboard", icon: "📊" },
+    { href: "/content", label: "Content Studio", icon: "✍️" },
+    { href: "/scheduler", label: "Scheduler", icon: "📅" },
+    { href: "/boosts", label: "Boosts", icon: "🚀" },
+    { href: "/blog", label: "Blog", icon: "📝" },
+    { href: "/analytics", label: "Analytics", icon: "📈" },
+    { href: "/referrals", label: "Referrals", icon: "🔗" },
+    { href: "/video", label: "Video Studio", icon: "🎬" },
+    { href: "/whatsapp", label: "WhatsApp", icon: "💬" },
+    { href: "/calendar", label: "Calendar", icon: "📅" },
+    { href: "/leads", label: "Leads & CRM", icon: "👥" },
+    ...(isAdmin ? [{ href: "/admin", label: "Admin Panel", icon: "⚙️" }] : []),
+  ];
 
   const NavLinks = () => (
     <>
