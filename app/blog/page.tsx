@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 
 interface BlogPost {
+  id: number;
   title: string;
   slug: string;
   excerpt: string;
@@ -37,10 +38,11 @@ export default function Blog() {
     if (!post) return;
     setPublishing(true);
     try {
-      const data = await api.post("/blog/publish", post);
-      setPublished(data.url || data.id);
-    } catch (e) {
-      alert("Error publishing");
+      const data = await api.post(`/blog/publish/${post.id}`, {});
+      if (data.status === "failed" || data.error) throw new Error(data.error || "Publish failed");
+      setPublished(data.url || String(post.id));
+    } catch (e: any) {
+      alert("Error publishing: " + (e.message || e));
     }
     setPublishing(false);
   };
