@@ -100,38 +100,46 @@ export default function Dashboard() {
   const [engagement, setEngagement] = useState<EngagementData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [campaign, setCampaign] = useState<{ id: number; name: string; app_name: string } | null>(null);
 
   useEffect(() => {
     const client = JSON.parse(localStorage.getItem("mp_client") || "{}");
-    const isAdmin = client?.plan === "agency";
+    const admin = client?.plan === "agency";
+    setIsAdmin(admin);
 
     const loadDashboard = async () => {
       let q = "";
-      if (!isAdmin) {
+      if (!admin) {
         try {
           const camp = await api.get("/auth/my-campaign");
+          setCampaign(camp);
           q = `?campaign_id=${camp.id}`;
-        } catch { /* fallback: no filter */ }
+        } catch { setLoading(false); return; }
       }
-      Promise.all([
+
+      const calls: Promise<unknown>[] = [
         api.get(`/analytics/dashboard${q}`),
         api.get(`/analytics/overview${q}`),
         api.get(`/analytics/angle-performance${q}`),
         api.get(`/analytics/history${q ? q + "&" : "?"}days=1`),
-        api.get("/jobs/trends"),
         api.get("/referrals/stats"),
-      ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
-        setStats(statsData);
-        setOverview(overviewData);
-        setAnglePerf(anglePerfData.angles || []);
-        setRecent(recentData.slice(0, 10));
-        setTrends(trendsData);
-        setReferrals(referralData);
-        setLoading(false);
-      }).catch(() => setLoading(false));
+      ];
+      if (admin) calls.push(api.get("/jobs/trends"));
+
+      const results = await Promise.allSettled(calls);
+      const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as PromiseFulfilledResult<unknown>).value : null;
+
+      setStats(val(0) as Stats);
+      setOverview(val(1) as Overview);
+      setAnglePerf(((val(2) as { angles: AnglePerf[] })?.angles) || []);
+      setRecent(((val(3) as RecentPost[]) || []).slice(0, 10));
+      setReferrals(val(4) as ReferralStats);
+      if (admin) setTrends(val(5) as TrendData);
+      setLoading(false);
 
       api.get(`/analytics/engagement${q}`).then(setEngagement).catch(() => {});
-      api.get("/health/platforms").then(setHealth).catch(() => {});
+      if (admin) api.get("/health/platforms").then(setHealth).catch(() => {});
     };
 
     loadDashboard();
@@ -168,7 +176,7 @@ export default function Dashboard() {
     { label: "Write Blog Post", href: "/blog", color: "bg-indigo-600 hover:bg-indigo-700" },
   ];
 
-  const cronActions = [
+  const adminCronActions = [
     { label: "Run Posts Now", endpoint: "/scheduler/run-posts", msg: "Posts triggered!", color: "bg-green-600 hover:bg-green-700" },
     { label: "Run Boosts Now", endpoint: "/scheduler/run-boosts", msg: "Boosts triggered!", color: "bg-purple-600 hover:bg-purple-700" },
     { label: "🔥 Newsjack Now", endpoint: "/jobs/newsjack", msg: "Newsjack post sent!", color: "bg-orange-600 hover:bg-orange-700" },
@@ -184,7 +192,12 @@ export default function Dashboard() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Dashboard</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Dashboard</h2>
+          {!isAdmin && campaign && (
+            <p className="text-sm text-gray-400 mt-1">🎯 {campaign.name} — {campaign.app_name}</p>
+          )}
+        </div>
         <span className="text-xs text-green-400 bg-green-400/10 px-3 py-1 rounded-full">● Autopilot Active</span>
       </div>
 
@@ -205,35 +218,36 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Telegram + Platform Row */}
+          {/* Telegram + Platform Row — admin only */}
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Telegram Channel Card */}
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">✈️</span>
-                <h3 className="text-lg font-semibold">Telegram Channel</h3>
+            {isAdmin && (
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-2xl">✈️</span>
+                  <h3 className="text-lg font-semibold">Telegram Channel</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Members</span>
+                    <span className="text-white font-bold text-lg">
+                      {overview?.telegram_members != null ? overview.telegram_members.toLocaleString() : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Channel</span>
+                    <a href="https://t.me/ReportAfricaNews" target="_blank" className="text-blue-400 hover:underline">@ReportAfricaNews</a>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Posts mirror from</span>
+                    <span className="text-gray-300">FB + LinkedIn + Newsjack</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Status</span>
+                    <span className="text-green-400">● Live</span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Members</span>
-                  <span className="text-white font-bold text-lg">
-                    {overview?.telegram_members != null ? overview.telegram_members.toLocaleString() : "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Channel</span>
-                  <a href="https://t.me/ReportAfricaNews" target="_blank" className="text-blue-400 hover:underline">@ReportAfricaNews</a>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Posts mirror from</span>
-                  <span className="text-gray-300">FB + LinkedIn + Newsjack</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Status</span>
-                  <span className="text-green-400">● Live</span>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Platform Activity */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -362,8 +376,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Trending Now */}
-          {trends && (
+          {/* Trending Now — admin only */}
+          {isAdmin && trends && (
             <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">🔥 Trending Now in Nigeria</h3>
@@ -445,8 +459,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Platform Health */}
-          {health && (
+          {/* Platform Health — admin only */}
+          {isAdmin && health && (
             <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">🔌 Platform Health</h3>
@@ -492,7 +506,7 @@ export default function Dashboard() {
                   {a.label}
                 </a>
               ))}
-              {cronActions.map((a) => (
+              {isAdmin && adminCronActions.map((a) => (
                 <button
                   key={a.label}
                   onClick={() => runAction(a.label, a.endpoint, a.msg)}
