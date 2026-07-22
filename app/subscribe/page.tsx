@@ -1,24 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://marketpilot-backend.onrender.com";
 
 export default function SubscribePage() {
   const [form, setForm] = useState({ name: "", email: "", whatsapp: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [campaignName, setCampaignName] = useState("");
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const name = params.get("c") || "";
-    setCampaignName(decodeURIComponent(name));
-  }, []);
-
-  const displayName = campaignName || "MarketPilot";
-  const tagline = campaignName
-    ? `Get the latest updates from ${campaignName}.`
-    : "Get the latest news, tips & updates.";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,15 +30,15 @@ export default function SubscribePage() {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">📰 {displayName}</h1>
-          <p className="text-gray-400">{tagline}</p>
+          <h1 className="text-3xl font-bold text-white mb-2">📰 ReportAfrica</h1>
+          <p className="text-gray-400">Get the latest news, tips & updates from Africa's citizen journalism platform.</p>
         </div>
 
         {status === "done" ? (
           <div className="bg-green-900/30 border border-green-700 rounded-xl p-8 text-center">
             <p className="text-4xl mb-3">🎉</p>
             <h2 className="text-xl font-bold text-white mb-2">You're in!</h2>
-            <p className="text-gray-400 text-sm">We'll keep you updated with the latest from {displayName}.</p>
+            <p className="text-gray-400 text-sm">We'll keep you updated with the latest from ReportAfrica.</p>
           </div>
         ) : (
           <form onSubmit={submit} className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">

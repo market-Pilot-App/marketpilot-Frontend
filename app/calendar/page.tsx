@@ -29,17 +29,12 @@ interface DayPost {
 }
 
 export default function CalendarPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [days, setDays] = useState<Record<string, DayPost[]>>({});
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const client = JSON.parse(localStorage.getItem("mp_client") || "{}");
-    const admin = client?.plan === "agency";
-    setIsAdmin(admin);
-    if (!admin) { setLoading(false); return; }
     setLoading(true);
     api.get(`/scheduler/calendar?month=${month}`)
       .then((d) => { setDays(d.days); setLoading(false); })
@@ -55,14 +50,6 @@ export default function CalendarPage() {
 
   const prevMonth = () => setMonth(new Date(year, mon - 2, 1).toISOString().slice(0, 7));
   const nextMonth = () => setMonth(new Date(year, mon, 1).toISOString().slice(0, 7));
-
-  if (!isAdmin) return (
-    <div className="flex flex-col items-center justify-center h-64 text-center">
-      <p className="text-4xl mb-4">📅</p>
-      <h3 className="text-lg font-bold mb-2">Content Calendar</h3>
-      <p className="text-gray-400 text-sm max-w-sm">Your content schedule is managed by the MarketPilot team. Posts are published automatically on your behalf.</p>
-    </div>
-  );
 
   const selectedKey = selected ? `${month}-${String(selected).padStart(2, "0")}` : null;
   const selectedPosts = selectedKey ? days[selectedKey] || [] : [];
