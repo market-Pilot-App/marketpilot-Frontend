@@ -89,8 +89,8 @@ export default function Blog() {
             )}
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-4 max-h-64 overflow-y-auto mb-4">
-            <pre className="text-sm text-gray-300 whitespace-pre-wrap font-sans">{post.content}</pre>
+          <div className="bg-gray-800 rounded-lg p-4 max-h-96 overflow-y-auto mb-4">
+            <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{post.content}</div>
           </div>
 
           {published ? (
