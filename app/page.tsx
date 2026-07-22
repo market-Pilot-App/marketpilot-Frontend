@@ -105,23 +105,19 @@ export default function Dashboard() {
     const client = JSON.parse(localStorage.getItem("mp_client") || "{}");
     const isAdmin = client?.plan === "agency";
 
-    // Admin uses campaign 1 (ReportAfrica), others use their assigned campaign
     const loadDashboard = async () => {
-      let campaignId = 1;
+      let q = "";
       if (!isAdmin) {
         try {
           const camp = await api.get("/auth/my-campaign");
-          campaignId = camp.id;
-        } catch {
-          // fallback to 1
-        }
+          q = `?campaign_id=${camp.id}`;
+        } catch { /* fallback: no filter */ }
       }
-      const q = `?campaign_id=${campaignId}`;
       Promise.all([
         api.get(`/analytics/dashboard${q}`),
         api.get(`/analytics/overview${q}`),
         api.get(`/analytics/angle-performance${q}`),
-        api.get(`/analytics/history${q}&days=1`),
+        api.get(`/analytics/history${q ? q + "&" : "?"}days=1`),
         api.get("/jobs/trends"),
         api.get("/referrals/stats"),
       ]).then(([statsData, overviewData, anglePerfData, recentData, trendsData, referralData]) => {
