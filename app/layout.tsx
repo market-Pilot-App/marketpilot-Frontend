@@ -2,8 +2,8 @@
 
 import "./globals.css";
 import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: "📊" },
@@ -21,7 +21,25 @@ const navItems = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [client, setClient] = useState<{ name: string; plan: string } | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mp_client");
+    if (stored) setClient(JSON.parse(stored));
+  }, []);
+
+  const handleLogout = () => {
+    document.cookie = "mp_token=; path=/; max-age=0";
+    localStorage.removeItem("mp_client");
+    router.push("/login");
+  };
+
+  const isAuthPage = pathname === "/login" || pathname === "/forgot-password" || pathname?.startsWith("/reset-password");
+  if (isAuthPage) return (
+    <html lang="en"><body className="bg-gray-950 text-white min-h-screen">{children}</body></html>
+  );
 
   const NavLinks = () => (
     <>
@@ -76,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="pt-4 border-t border-gray-800 text-xs text-gray-500">
                 <p>App: ReportAfrica</p>
                 <p className="text-green-400 mt-1">● System Active</p>
+                <button onClick={handleLogout} className="mt-3 text-red-400 hover:text-red-300 transition-colors">Sign out</button>
               </div>
             </div>
           </div>
@@ -92,8 +111,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <NavLinks />
             </nav>
             <div className="pt-6 border-t border-gray-800 text-xs text-gray-500">
-              <p>App: ReportAfrica</p>
+              {client && <p className="text-white font-medium truncate">{client.name}</p>}
+              {client && <p className="text-blue-400 capitalize">{client.plan} plan</p>}
               <p className="text-green-400 mt-1">● System Active</p>
+              <button onClick={handleLogout} className="mt-3 text-red-400 hover:text-red-300 transition-colors">Sign out</button>
             </div>
           </aside>
 
