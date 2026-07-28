@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
 
 const ANGLES = [
@@ -16,13 +16,11 @@ const ANGLES = [
 ];
 
 const PLATFORMS = [
-  { value: "facebook", label: "📘 Facebook", limit: 500, minPlan: "solo" },
-  { value: "instagram", label: "📸 Instagram", limit: 300, minPlan: "starter" },
-  { value: "linkedin", label: "💼 LinkedIn", limit: 500, minPlan: "growth" },
-  { value: "twitter", label: "🐦 X/Twitter", limit: 280, minPlan: "growth" },
+  { value: "facebook", label: "📘 Facebook", limit: 500 },
+  { value: "twitter", label: "🐦 X/Twitter", limit: 280 },
+  { value: "linkedin", label: "💼 LinkedIn", limit: 500 },
+  { value: "instagram", label: "📸 Instagram", limit: 300 },
 ];
-
-const PLAN_RANK: Record<string, number> = { solo: 1, starter: 2, growth: 3, agency: 4, admin: 4 };
 
 const LANGUAGES = [
   { value: "english", label: "🇬🇧 English" },
@@ -50,17 +48,8 @@ export default function ContentStudio() {
   const [results, setResults] = useState<GeneratedContent[]>([]);
   const [postStatus, setPostStatus] = useState<Record<number, PostStatus>>({});
   const [editText, setEditText] = useState<Record<number, string>>({});
-  const [plan, setPlan] = useState("solo");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("mp_client");
-    if (stored) setPlan(JSON.parse(stored).plan ?? "solo");
-  }, []);
-
-  const canUse = (minPlan: string) => (PLAN_RANK[plan] ?? 1) >= (PLAN_RANK[minPlan] ?? 1);
 
   const charLimit = PLATFORMS.find((p) => p.value === platform)?.limit ?? 500;
-  const selectedPlatformLocked = !canUse(PLATFORMS.find((p) => p.value === platform)?.minPlan ?? "solo");
 
   const generate = async () => {
     setLoading(true);
@@ -128,9 +117,7 @@ export default function ContentStudio() {
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"
             >
               {PLATFORMS.map((p) => (
-                <option key={p.value} value={p.value} disabled={!canUse(p.minPlan)}>
-                  {p.label}{!canUse(p.minPlan) ? ` 🔒 ${p.minPlan}+` : ""}
-                </option>
+                <option key={p.value} value={p.value}>{p.label}</option>
               ))}
             </select>
           </div>
@@ -171,20 +158,13 @@ export default function ContentStudio() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {selectedPlatformLocked ? (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-yellow-400">🔒 Upgrade to use this platform</span>
-              <a href="/subscribe" className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm font-medium">Upgrade Plan</a>
-            </div>
-          ) : (
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
-            >
-              {loading ? "Generating..." : "✨ Generate Content"}
-            </button>
-          )}
+          <button
+            onClick={generate}
+            disabled={loading}
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+          >
+            {loading ? "Generating..." : "✨ Generate Content"}
+          </button>
           {results.length > 0 && (
             <span className="text-xs text-gray-500">{results.length} posts generated</span>
           )}
