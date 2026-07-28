@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+
+const PLAN_RANK: Record<string, number> = { solo: 1, starter: 2, growth: 3, agency: 4, admin: 4 };
 
 export default function Boosts() {
   const [settings, setSettings] = useState({
@@ -12,7 +14,21 @@ export default function Boosts() {
     daily_budget_limit: 500,
   });
   const [saving, setSaving] = useState(false);
-  const [balance, setBalance] = useState<string | null>(null); // v2
+  const [balance, setBalance] = useState<string | null>(null);
+  const [plan, setPlan] = useState("solo");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("mp_client");
+    if (stored) setPlan(JSON.parse(stored).plan ?? "solo");
+  }, []);
+
+  const canUse = (minPlan: string) => (PLAN_RANK[plan] ?? 1) >= (PLAN_RANK[minPlan] ?? 1);
+  const UpgradePrompt = ({ minPlan }: { minPlan: string }) => (
+    <div className="flex items-center gap-3 p-3 bg-yellow-900/20 border border-yellow-700/40 rounded-lg">
+      <span className="text-sm text-yellow-400">🔒 Requires {minPlan}+ plan</span>
+      <a href="/subscribe" className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-xs font-medium">Upgrade</a>
+    </div>
+  );
 
   const saveSettings = async () => {
     setSaving(true);
@@ -120,17 +136,21 @@ export default function Boosts() {
             <h3 className="text-lg font-semibold mb-4">🎵 TikTok Growth</h3>
             <p className="text-sm text-gray-400 mb-1">100 followers + 1,000 video views</p>
             <p className="text-sm text-gray-500 mb-3">~$0.22 per run → @reportafrica8</p>
-            <button onClick={async () => { try { const r = await api.post("/scheduler/boost-tiktok"); alert(`Done! ${r.results?.map((x: any) => x.success ? x.service + ' ✅' : x.service + ' ❌').join(', ')}`); } catch { alert("Error"); } }} className="px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg text-sm">
-              🚀 Boost TikTok Now
-            </button>
+            {canUse("starter") ? (
+              <button onClick={async () => { try { const r = await api.post("/scheduler/boost-tiktok"); alert(`Done! ${r.results?.map((x: any) => x.success ? x.service + ' ✅' : x.service + ' ❌').join(', ')}`); } catch { alert("Error"); } }} className="px-4 py-2 bg-pink-600 hover:bg-pink-700 rounded-lg text-sm">
+                🚀 Boost TikTok Now
+              </button>
+            ) : <UpgradePrompt minPlan="starter" />}
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-sm text-gray-400 mb-1">1,000 Nigerian Google organic + 1,000 Nigerian social visitors</p>
             <p className="text-sm text-gray-500 mb-3">~$1.16 per run → reportafrica.africa</p>
-            <button onClick={async () => { try { const r = await api.post("/scheduler/boost-website"); alert(`Done! Orders: ${r.results?.map((x: any) => x.order_id).join(', ')}`); } catch { alert("Error"); } }} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
-              🚀 Boost Website Now
-            </button>
+            {canUse("growth") ? (
+              <button onClick={async () => { try { const r = await api.post("/scheduler/boost-website"); alert(`Done! Orders: ${r.results?.map((x: any) => x.order_id).join(', ')}`); } catch { alert("Error"); } }} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
+                🚀 Boost Website Now
+              </button>
+            ) : <UpgradePrompt minPlan="growth" />}
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -148,9 +168,11 @@ export default function Boosts() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">🚀 Manual Boost</h3>
             <p className="text-sm text-gray-400 mb-3">Boost all recent unboosted posts now</p>
-            <button onClick={runBoosts} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">
-              Run Boosts Now
-            </button>
+            {canUse("starter") ? (
+              <button onClick={runBoosts} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">
+                Run Boosts Now
+              </button>
+            ) : <UpgradePrompt minPlan="starter" />}
           </div>
         </div>
       </div>
